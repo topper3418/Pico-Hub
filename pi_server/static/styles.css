@@ -1,0 +1,52 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: black;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    position: fixed;
+    bottom: 0;
+    height: fit-content;
+    width: 95%;
+    padding: 2.5%;
+}
+
+.canvas-container {
+    width: 100%;
+    padding-top: 2.5vw;
+}
+
+.brightness-slider {
+    width: 100%;
+    padding-top: 2.5vw;
+    object-fit: contain;
+}
+
+.color-grid {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+.bottom-row {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+	width: 100%;
+    padding-top: 2.5vw;
+}
+
+.button {
+	height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    background-color: rgb(64,64,64);
+    color: rgba(0, 0, 0, 0);
+    padding: 2.5vw;
+}
