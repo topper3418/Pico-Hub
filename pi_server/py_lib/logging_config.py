@@ -11,7 +11,7 @@ class CustomLogger(logging.Logger):
             
     def _get_default_handler(self):
         """This method will return a default StreamHandler with a custom formatter"""
-        handler = logging.FileHandler(f'log_{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.log')
         formatter = logging.Formatter('%(asctime)s %(levelname)s [%(name)s] %(message)s')
+        handler = logging.FileHandler(f'{self.name}_log_{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.log')
         handler.setFormatter(formatter)
         return handler

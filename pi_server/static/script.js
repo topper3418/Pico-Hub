@@ -13,12 +13,11 @@ white_button.style.backgroundColor = 'rgb(255,255,255)';
 var bottom_row = document.querySelector('.bottom-row');
 // set the colorpicker canvas to square
 colorGrid.height = colorGrid.width;
-// global variable to hold the color and brightness
+// global variable to hold the color
 var color = 'rgb(255,255,255)';
-var brightness = 255;
 
 // Function to handle Ajax request
-function handleClickRequest_old(data) {
+function handleClickRequest(data) {
     // Log to the console
     console.log('Ajax request sent with data: ', data);
     // Perform Ajax request here
@@ -34,32 +33,7 @@ function handleClickRequest_old(data) {
             console.log('Error:', error);
         }
     });
-};
-
-function handleClickRequest(data) {
-    console.log('Ajax request sent with data:', data);
-  
-    fetch('/handle_click', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(responseData => {
-        console.log('Response from server:', responseData);
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
-};
-  
+}
 // function to redraw the color canvas
 function redrawColorCanvas() {
     // Redraw the canvas with the new click coordinates, will read frequently
