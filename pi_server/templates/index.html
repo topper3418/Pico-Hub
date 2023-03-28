@@ -3,15 +3,18 @@
 <head>
 	<title>Color Wheel and Button</title>
 	<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
-<body id = "body">
-	<div class="container">
-		<canvas class="color-grid" id="color-grid" data-src="{{ url_for('static', filename='color_picker.jpg') }}"></canvas>
-		<canvas class="brightness-slider" id="brightness-canvas"></canvas>
-		<div class="bottom-row">
-			<button class="button" id="white-button">C</button>
-			<button class="button" id="toggle-button">toggle</button>
+<body>
+	<div id="container">
+		<div id="colorpicker-container">
+			<canvas id="colorpicker" data-src="{{ url_for('static', filename='color_picker.jpg') }}"></canvas>
+		</div>
+		<div id="brightpicker-container">
+			<canvas id="brightpicker"></canvas>
+		</div>
+		<div id="button-container">
+			<button class="button" id="color-button">color selection</button>
+			<button class="button" id="toggle-button">toggle on/off</button>
 		</div>
 	</div>
 	<script src="{{ url_for('static', filename='script.js') }}"></script>

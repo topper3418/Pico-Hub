@@ -13,9 +13,6 @@ logger.setLevel('DEBUG')
 # define the global variables
 color = "black"
 
-# initialize the pico interface
-led_strip = LedStrip("proto", "10.0.1.38")
-
 @app.route("/")
 def index():
   html_content = render_template("index.html", color=color)
@@ -39,4 +36,4 @@ def handle_click():
   return jsonify(str(response))
 
 if __name__ == "__main__":
-  app.run(host="0.0.0.0", port=5001, debug=False)
+  app.run(host="0.0.0.0", port=5001, debug=True)

@@ -1,45 +1,67 @@
 // Create a new image element
-var colorGrid = document.getElementById('color-grid');
-var imageUrl = colorGrid.getAttribute('data-src');
+
+// initialize element variables
+var colorpicker_container = document.getElementById('colorpicker-container');
+var brightpicker_container = document.getElementById('brightpicker-container');
+var button_container = document.getElementById('button-container');
+var colorpicker = document.getElementById('colorpicker');
+var brightpicker = document.getElementById('brightpicker');
+var toggle_button = document.getElementById('toggle-button');
+var color_button = document.getElementById('color-button');
+// initialize gloabal variables
+var color = 'rgba(255,255,255, 0)';
+// initialize the image in memory
+var imageUrl = colorpicker.getAttribute('data-src');
 var img = new Image();
 img.src = imageUrl;
-// create the brightness canvas
-var brightnessCanvas = document.getElementById('brightness-canvas');
-// Create the button
-var toggle_button = document.getElementById('toggle-button');
-var white_button = document.getElementById('white-button');
-white_button.style.backgroundColor = 'rgb(255,255,255)';
+// calculate sizes
+width = colorpicker.clientWidth;
+colorpicker_height = width + 'px';
+brightpicker_height = width/4 + 'px';
+button_height = width/8 + 'px';
+color_button_width = width/8 + 'px';
+// apply sizes
+colorpicker.style.height = colorpicker_height;
+brightpicker.style.height = brightpicker_height;
+toggle_button.style.height = button_height;
+color_button.style.height = button_height;
+color_button.style.width = color_button_width;
+
+
+
+//color_button.style.backgroundColor = 'rgb(255,255,255)';
 // Get the bottom row so we can make it the right height as well
-var bottom_row = document.querySelector('.bottom-row');
+//var bottom_row = document.querySelector('.bottom-row');
 // set the colorpicker canvas to square
-colorGrid.height = colorGrid.width;
+//colorGrid.height = colorGrid.width;
 // global variable to hold the color
-var color = 'rgb(255,255,255)';
+//var color = 'rgb(255,255,255)';
 
 // Function to handle Ajax request
 function handleClickRequest(data) {
     // Log to the console
     console.log('Ajax request sent with data: ', data);
     // Perform Ajax request here
-    $.ajax({
-        type: 'POST',
-        url: '/handle_click',
-        data: JSON.stringify(data),
-        contentType: 'application/json',
-        success: function (response) {
-            console.log('Response from server:', response);
+    fetch('/handle_click', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
         },
-        error: function (error) {
-            console.log('Error:', error);
-        }
+        body: JSON.stringify(data)
+        })
+    .then(response => {
+        console.log('Response from server:', response);
+    })
+    .catch(error => {
+        console.log('Error:', error);
     });
 }
 // function to redraw the color canvas
 function redrawColorCanvas() {
     // Redraw the canvas with the new click coordinates, will read frequently
-    var ctx = colorGrid.getContext('2d');
-    ctx.clearRect(0, 0, colorGrid.width, colorGrid.height);
-    ctx.drawImage(img, 0, 0, colorGrid.width, colorGrid.height);
+    var ctx = colorpicker.getContext('2d');
+    ctx.clearRect(0, 0, colorpicker.width, colorpicker.height);
+    ctx.drawImage(img, 0, 0, colorpicker.width, colorpicker.height);
 
     // log to the console
     console.log('color canvas redrawn');
@@ -49,8 +71,7 @@ function redrawColorCanvas() {
 // function to redraw the brightness canvas
 function redrawBrightnessCanvas() {
     // Set the brightness canvas height to match the image height
-    brightnessCanvas.width = colorGrid.width;
-    brightnessCanvas.height = colorGrid.height/8;
+    brightpicker.height = colorpicker.clientHeight/8;
 
     // parse color
     var rgb = color.substring(4, color.length - 1).split(",");
@@ -59,12 +80,12 @@ function redrawBrightnessCanvas() {
     var b = rgb[2].trim();
 
     // create a gradient on the brightness canvas
-    var ctx = brightnessCanvas.getContext('2d');
-    var grd = ctx.createLinearGradient(0, 0, brightnessCanvas.width, 0);
+    var ctx = brightpicker.getContext('2d');
+    var grd = ctx.createLinearGradient(0, 0, brightpicker.width, 0);
     grd.addColorStop(0, 'rgba(' + r + ',' + g + ',' + b + ',0)');
     grd.addColorStop(1, color);
     ctx.fillStyle = grd;
-    ctx.fillRect(0, 0, brightnessCanvas.width, brightnessCanvas.height);
+    ctx.fillRect(0, 0, brightpicker.width, brightpicker.height);
     // log to the console
     console.log('brightness canvas redrawn to: ', color);
     // return the context to extract the pixel data
@@ -118,26 +139,26 @@ img.onload = function() {
     // Redraw the brightness canvas for the first time
     redrawBrightnessCanvas();
     // Redraw the bottom row for the first time
-    redrawBottomRow();
+    // redrawBottomRow();
 };
 
 // Add event listener for clicks on the canvas
-colorGrid.addEventListener('click', function (event) {
+colorpicker.addEventListener('click', function (event) {
     // Redraw the canvas with the new click coordinates
     ctx = redrawColorCanvas();
 
     // adjust the click coordinates to match the image
-    var x = event.offsetX * (colorGrid.width / colorGrid.clientWidth);
-    var y = event.offsetY * (colorGrid.height / colorGrid.clientHeight);
+    var x = event.offsetX * (colorpicker.width / colorpicker.clientWidth);
+    var y = event.offsetY * (colorpicker.height / colorpicker.clientHeight);
 
     // Get the pixel data for the clicked coordinate
     var pixelData = ctx.getImageData(x, y, 1, 1).data;
 
     // set the color accordingly
-    setColor(pixelData[0], pixelData[1], pixelData[2]);
+    //setColor(pixelData[0], pixelData[1], pixelData[2]);
 
     // Verbose deubgging
-    console.log("color click detected. coords: (" + event.offsetX + ", " + event.offsetY + "), color: " + color);
+    console.log("color click detected. coords: (" + event.offsetX + ", " + event.offsetY + "), color: " + pixelData);
 
     // Call the Ajax request function with the data
     var data = {
@@ -146,17 +167,17 @@ colorGrid.addEventListener('click', function (event) {
         'y': event.offsetY,
         'color': color
     };
-    handleClickRequest(data);
+    //handleClickRequest(data);
 });
 
 // Add event listener for clicks on the brightness canvas
-brightnessCanvas.addEventListener('click', function (event) {
+brightpicker.addEventListener('click', function (event) {
     // Redraw the brightness canvas with the new click coordinates
     ctx = redrawBrightnessCanvas(color);
 
     // adjust the click coordinates to match the image
-    var x = event.offsetX * (brightnessCanvas.width / brightnessCanvas.clientWidth);
-    var y = event.offsetY * (brightnessCanvas.height / brightnessCanvas.clientHeight);
+    var x = event.offsetX * (brightpicker.width / brightpicker.clientWidth);
+    var y = event.offsetY * (brightpicker.height / brightpicker.clientHeight);
 
     // Get the pixel data for the clicked coordinate
     var pixelData = ctx.getImageData(x, y, 1, 1).data;
@@ -189,7 +210,7 @@ toggle_button.addEventListener('click', function (event) {
 });
 
 // Add event listener for clicks on the white button
-white_button.addEventListener('click', function (event) {
+color_button.addEventListener('click', function (event) {
     // log the click
     console.log("white click detected");
     // Call the Ajax request function with the data
