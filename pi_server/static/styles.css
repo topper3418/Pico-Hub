@@ -61,4 +61,5 @@ div {
 /* make the toggle button flex grow to fill the space */
 #toggle-button {
     flex-grow: 1;
+    padding-left: 3%;
 }
