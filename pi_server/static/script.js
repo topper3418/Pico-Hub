@@ -12,6 +12,13 @@ class LedStripObject {
         this.color = newColor;
       }
     }
+    getColor() {
+        if (this.hueMode) {
+            return this.hueColor;
+        } else {
+            return this.color;
+        }
+    }
     setBrightness(newBrightness) {
       this.brightness = newBrightness;
     }
@@ -32,8 +39,6 @@ var toggle_button = document.getElementById('toggle-button');
 var mode_button = document.getElementById('color-button');
 // initialize gloabal variables
 const led_strip = new LedStripObject();
-led_strip.hueMode = 'color';
-var status = 'off';
 // initialize the image in memory
 var imageUrl = colorpicker_canvas.getAttribute('data-src');
 var img = new Image();
@@ -91,28 +96,42 @@ function drawColorPicker() {
 function drawHuePicker() {
     // Get the 2D context of the canvas
     const ctx = colorpicker_canvas.getContext('2d');
+    ctx.clearRect(0, 0, colorpicker_canvas.width, colorpicker_canvas.height);
 
     // Calculate the center and radius of the canvas
     const centerX = colorpicker_canvas.width / 2;
     const centerY = colorpicker_canvas.height / 2;
     const radius = Math.sqrt(centerX * centerX + centerY * centerY);
 
-    // Create a radial gradient
-    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+    // Create the first linear gradient (bottom-left to top-right)
+    const gradient1 = ctx.createLinearGradient(0, 0, colorpicker_canvas.width, colorpicker_canvas.height);
+    gradient1.addColorStop(0, 'rgb(255, 0, 0');  // red
+    gradient1.addColorStop(.5, 'rgb(255, 0, 0');  // red
+    gradient1.addColorStop(1, 'rgb(255, 165, 0)');  // orange
 
-    // Define the gradient colors
-    gradient.addColorStop(0, 'orange');
-    gradient.addColorStop(0.5, 'white');
-    gradient.addColorStop(1, 'blue');
+    // Create the second linear gradient (top-left to bottom-right)
+    const gradient2 = ctx.createLinearGradient(0, colorpicker_canvas.height, colorpicker_canvas.width, 0);
+    gradient2.addColorStop(0, 'rgb(215, 215, 0');  //yellow
+    gradient2.addColorStop(.65, 'rgb(215, 215, 0');  //yellow
+    gradient2.addColorStop(.9, 'rgb(215, 215, 215)');  // white
+    gradient2.addColorStop(1, 'rgb(215, 215, 215)');  // white
 
-    // Draw the gradient on the canvas
-    ctx.fillStyle = gradient;
+    // Draw the first gradient on the canvas
+    ctx.fillStyle = gradient1;
     ctx.fillRect(0, 0, colorpicker_canvas.width, colorpicker_canvas.height);
+
+    // Set the globalCompositeOperation to 'lighter' to blend the two gradients
+    ctx.globalCompositeOperation = 'lighter';
+
+    // Draw the second gradient on the canvas
+    ctx.fillStyle = gradient2;
+    ctx.fillRect(0, 0, colorpicker_canvas.width, colorpicker_canvas.height);
+
     // return the context to extract the pixel data, if needed
     return ctx
 };
 function redrawBrightPicker() {
-    let [r, g, b] = parseColor(led_strip.color);
+    let [r, g, b] = parseColor(led_strip.getColor());
     // create a gradient on the brightness canvas
     var ctx = brightpicker.getContext('2d');
     ctx.clearRect(0, 0, brightpicker.width, brightpicker.height);
@@ -136,10 +155,11 @@ function toggleMode() {
     console.log('mode set to: ', led_strip.hueMode);
     // redraw the color picker
     redrawColorPicker();
+    redrawBrightPicker();
 };
 function setColor(r, g, b) {
     // set the color, and redraw the brightness canvas
-    led_strip.color = 'rgb(' + r + ',' + g + ',' + b + ')';
+    led_strip.setColor('rgb(' + r + ',' + g + ',' + b + ')');
     redrawBrightPicker();
     // log to the console
     console.log('color set to: ', led_strip.color);
@@ -249,12 +269,11 @@ mode_button.addEventListener('click', function (event) {
 });
 
 
-// lets reason this out: 
-    // Kwhen the image is clicked, the color changes. 
-    // Kwhen the color is changed, we need to update the brightness canvas and the toggle button
-    // Kwhen the brightness is changed, we need to update the color canvas
-    // when the status is off, the toggle button should be slightly brighter than when it is on
-    // when the status is on, the toggle button should be slightly darker than when it is off
-    // when the white button is clicked, the color does not change, but the color button should change to the current color
-    // when the white button is clicked, the color canvas should change to a hue canvas
-    // I'll need to switch to a bunch of <a> tags to link images to the canvas
+// continue eating the code with the object
+// figure out how to do propertychange scripts, I know you can
+// figure out if we really need buttons, we can just use the canvas
+// get the buttons spaced right
+// make the button the current color
+// get the toggle button to respond properly to status
+// make status an attribute of the object
+
