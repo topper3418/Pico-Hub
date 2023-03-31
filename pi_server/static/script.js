@@ -1,29 +1,51 @@
+class LedStripObject {
+    constructor() {
+      this.color = 'rgb(255,0,0)';
+      this.hueColor = 'rgb(255,255,255)';
+      this.brightness = 255;
+      this.hueMode = false;
+    }
+    setColor(newColor) {
+      if (this.hueMode) {
+        this.hueColor = newColor;
+      } else {
+        this.color = newColor;
+      }
+    }
+    setBrightness(newBrightness) {
+      this.brightness = newBrightness;
+    }
+    toggleMode() {
+      this.hueMode = !this.hueMode;
+    }
+  };
+  
+
+
 // initialize element variables
 var colorpicker_container = document.getElementById('colorpicker-container');
 var brightpicker_container = document.getElementById('brightpicker-container');
 var button_container = document.getElementById('button-container');
-var colorpicker = document.getElementById('colorpicker');
+var colorpicker_canvas = document.getElementById('colorpicker');
 var brightpicker = document.getElementById('brightpicker');
 var toggle_button = document.getElementById('toggle-button');
 var mode_button = document.getElementById('color-button');
 // initialize gloabal variables
-var whitecolor = 'rgb(255,255,255)';
-var color = 'rgb(255,0,0)';
-var brightness = 255;
-var mode = 'color';
+const led_strip = new LedStripObject();
+led_strip.hueMode = 'color';
 var status = 'off';
 // initialize the image in memory
-var imageUrl = colorpicker.getAttribute('data-src');
+var imageUrl = colorpicker_canvas.getAttribute('data-src');
 var img = new Image();
 img.src = imageUrl;
 // calculate sizes
-width = colorpicker.clientWidth;
+width = colorpicker_canvas.clientWidth;
 colorpicker_height = width + 'px';
 brightpicker_height = width/4 + 'px';
 button_height = width/8 + 'px';
 color_button_width = width/8 + 'px';
 // apply sizes
-colorpicker.style.height = colorpicker_height;
+colorpicker_canvas.style.height = colorpicker_height;
 brightpicker.style.height = brightpicker_height;
 toggle_button.style.height = button_height;
 mode_button.style.height = button_height;
@@ -31,7 +53,7 @@ mode_button.style.width = color_button_width;
 
 // functions
 function handleClickRequest(data) {
-    console.log('Sending fetch request sent with data: ', data);
+    console.log('Sending fetch request with data: ', data);
     // Perform fetch request to server
     fetch('/handle_click', {
         method: 'POST',
@@ -47,50 +69,87 @@ function handleClickRequest(data) {
             console.log('Error:', error);
         });
 };
-function redrawColorCanvas() {
-    // Redraw the canvas with the new click coordinates, will read frequently
-    var ctx = colorpicker.getContext('2d');
-    ctx.clearRect(0, 0, colorpicker.width, colorpicker.height);
-    ctx.drawImage(img, 0, 0, colorpicker.width, colorpicker.height);
+function redrawColorPicker() {
+    // depending on the mode, draw the color picker with the image
+    var ctx;
+    if (led_strip.hueMode) {
+        ctx = drawHuePicker();
+    } else {
+        ctx = drawColorPicker();
+    };
     // return the context to extract the pixel data if needed
     return ctx;
 };
-function redraw_brightpicker() {
-    let [r, g, b] = parseColor(color);
+function drawColorPicker() {
+    // Draw the image on the canvas
+    const ctx = colorpicker_canvas.getContext('2d');
+    ctx.clearRect(0, 0, colorpicker_canvas.width, colorpicker_canvas.height);
+    ctx.drawImage(img, 0, 0, colorpicker_canvas.width, colorpicker_canvas.height);
+    // return the context to extract the pixel data if needed
+    return ctx;
+};
+function drawHuePicker() {
+    // Get the 2D context of the canvas
+    const ctx = colorpicker_canvas.getContext('2d');
+
+    // Calculate the center and radius of the canvas
+    const centerX = colorpicker_canvas.width / 2;
+    const centerY = colorpicker_canvas.height / 2;
+    const radius = Math.sqrt(centerX * centerX + centerY * centerY);
+
+    // Create a radial gradient
+    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+
+    // Define the gradient colors
+    gradient.addColorStop(0, 'orange');
+    gradient.addColorStop(0.5, 'white');
+    gradient.addColorStop(1, 'blue');
+
+    // Draw the gradient on the canvas
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, colorpicker_canvas.width, colorpicker_canvas.height);
+    // return the context to extract the pixel data, if needed
+    return ctx
+};
+function redrawBrightPicker() {
+    let [r, g, b] = parseColor(led_strip.color);
     // create a gradient on the brightness canvas
     var ctx = brightpicker.getContext('2d');
+    ctx.clearRect(0, 0, brightpicker.width, brightpicker.height);
     var grd = ctx.createLinearGradient(0, 0, brightpicker.width, 0);
     grd.addColorStop(0, 'rgba(' + r + ',' + g + ',' + b + ',0)');
-    grd.addColorStop(1, color);
+    grd.addColorStop(1, 'rgba(' + r + ',' + g + ',' + b + ',1)');
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, brightpicker.width, brightpicker.height);
     // return the context to extract the pixel data, if needed
     return ctx;
 };
-function setMode(m) {
+function toggleMode() {
     // set the mode, and set the color of the color button
-    mode = m;
-    if (mode == 'white') {
-        mode_button.style.backgroundColor = color;
-    } else if (mode == 'color') {
-        mode_button.style.backgroundColor = whitecolor;
+    led_strip.toggleMode();
+    if (led_strip.hueMode) {
+        mode_button.style.backgroundColor = led_strip.color;
+    } else {
+        mode_button.style.backgroundColor = led_strip.hueColor;
     };
     // log to the console
-    console.log('mode set to: ', mode);
+    console.log('mode set to: ', led_strip.hueMode);
+    // redraw the color picker
+    redrawColorPicker();
 };
 function setColor(r, g, b) {
     // set the color, and redraw the brightness canvas
-    color = 'rgb(' + r + ',' + g + ',' + b + ')';
-    redraw_brightpicker();
+    led_strip.color = 'rgb(' + r + ',' + g + ',' + b + ')';
+    redrawBrightPicker();
     // log to the console
-    console.log('color set to: ', color);
+    console.log('color set to: ', led_strip.color);
 };
 function setBrightness(b) {
     // set the brightness, and set the opacity of the color canvas
-    brightness = b;
-    colorpicker.style.opacity = brightness/255;
+    led_strip.brightness = b;
+    colorpicker_canvas.style.opacity = led_strip.brightness/255;
     // log to the console
-    console.log('brightness set to: ', brightness);
+    console.log('brightness set to: ', led_strip.brightness);
 };
 function parseColor(color_in) {
     // function to parse color to r g and b
@@ -104,21 +163,19 @@ function parseColor(color_in) {
 // event listeners
 img.onload = function() {
     // Redraw the canvas for the first time
-    redrawColorCanvas();
+    redrawColorPicker();
     // Redraw the brightness canvas for the first time
-    redraw_brightpicker();
-    // set the mode to the curernt mode
-    setMode(mode);
+    redrawBrightPicker();
 };
-colorpicker.addEventListener('click', function (event) {
+colorpicker_canvas.addEventListener('click', function (event) {
     // Add event listener for clicks on the canvas
 
     // Redraw the canvas with the new click coordinates
-    ctx = redrawColorCanvas();
+    ctx = redrawColorPicker();
 
     // adjust the click coordinates to match the image
-    var x = event.offsetX * (colorpicker.width / colorpicker.clientWidth);
-    var y = event.offsetY * (colorpicker.height / colorpicker.clientHeight);
+    var x = event.offsetX * (colorpicker_canvas.width / colorpicker_canvas.clientWidth);
+    var y = event.offsetY * (colorpicker_canvas.height / colorpicker_canvas.clientHeight);
 
     // Get the pixel data for the clicked coordinate
     var pixelData = ctx.getImageData(x, y, 1, 1).data;
@@ -134,13 +191,13 @@ colorpicker.addEventListener('click', function (event) {
         'type': 'image_click',
         'x': event.offsetX,
         'y': event.offsetY,
-        'color': color
+        'color': led_strip.color
     };
     handleClickRequest(data);
 });
 brightpicker.addEventListener('click', function (event) {
     // Redraw the brightness canvas with the new click coordinates
-    ctx = redraw_brightpicker();
+    ctx = redrawBrightPicker();
 
     // adjust the click coordinates to match the image
     var x = event.offsetX * (brightpicker.width / brightpicker.clientWidth);
@@ -180,21 +237,14 @@ toggle_button.addEventListener('click', function (event) {
 });
 mode_button.addEventListener('click', function (event) {
     // change the mode
-    if (mode == 'white') {
-        setMode('color');
-    } else if (mode == 'color') {
-        setMode('white');
-    };
+    toggleMode();
     // log the click
-    console.log("white click detected");
+    console.log("mode click detected");
     // Call the Ajax request function with the data
     var data = {
         'type': 'mode_click',
         'color': mode_button.style.backgroundColor
     };
-    // set the color to white
-    col = parseColor(mode_button.style.backgroundColor);
-    setColor(col[0], col[1], col[2]);
     handleClickRequest(data);
 });
 
